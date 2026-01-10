@@ -14,14 +14,14 @@ GTextEdit::~GTextEdit()
 
 void GTextEdit::wheelEvent(QWheelEvent *e)
 {
-    if (e->angleDelta() == QPoint(0, 120))
-    {
-        zoomIn();
-    }
+    if (e->modifiers() & Qt::ControlModifier) {
+            const int dy = e->angleDelta().y() != 0 ? e->angleDelta().y()
+                                                    : e->pixelDelta().y();
 
-    if (e->angleDelta() == QPoint(0, -120))
-    {
-        zoomOut();
-    }
-    QTextEdit::wheelEvent(e);
+            if (dy > 0) zoomIn();
+            else if (dy < 0) zoomOut();
+
+            e->accept();
+            return;
+        }
 }
