@@ -12,8 +12,9 @@ public:
 
 private slots:
     void setFontSize(int font_size);
-    void openFile();
-    void saveFile();
+    void openFile(QString filename);
+    void openFileDialog();
+    void saveFileDialog();
 
 private:
     QFont m_mainFont;

@@ -12,18 +12,19 @@
 #include <QFont>
 #include <QFileDialog>
 #include <QFile>
+#include <QVBoxLayout>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent), m_mainFont("Titillium Web")
 {
-    editor = new GTextEdit(this);
-    setCentralWidget(editor);
-    setFont(m_mainFont);
-    setFontSize(m_default_font_pt);
+    auto editorPanel = new QWidget;
+    auto editorLayout = new QVBoxLayout;
+    editorPanel->setLayout(editorLayout);
+
+    setCentralWidget(editorPanel);
 
     // Toolbar
     auto toolbar = new QToolBar("Toolbar", this);
-    addToolBar(toolbar);
 
     auto open_action = new QAction("Open", this);
     auto save_action = new QAction("Save", this);
@@ -38,13 +39,21 @@ MainWindow::MainWindow(QWidget *parent) :
     font_size->setValue(m_default_font_pt);
 
     toolbar->addWidget(font_size);
+    editorLayout->addWidget(toolbar);
+
+    // text editor
+    editor = new GTextEdit(this);
+    setFont(m_mainFont);
+    setFontSize(m_default_font_pt);
+    editorLayout->addWidget(editor);
+
 
     // toolbar connections
     connect(open_action, &QAction::triggered,
-            this, &MainWindow::openFile);
+            this, &MainWindow::openFileDialog);
 
     connect(save_action, &QAction::triggered,
-            this, &MainWindow::saveFile);
+            this, &MainWindow::saveFileDialog);
 
     connect(clear_action, &QAction::triggered,
             editor, &QTextEdit::clear);
@@ -69,13 +78,24 @@ MainWindow::MainWindow(QWidget *parent) :
 
     dirWindow->setWidget(treeView);
 
+    // directory connections
+    connect(treeView, &QTreeView::clicked,
+            this, [this, model](const QModelIndex &index)
+            {
+                QString path = model->filePath(index);
+                qDebug() << path;
+                openFile(path);
+            }
+    );
+
     //hide extra columns
     for (int i = 1; i<4; i++) {
         treeView->hideColumn(i);
     }
 
+    // resizing
     this->resize(800, 500);
-    dirWindow->resize(100, dirWindow->width());
+    dirWindow->resize(100, dirWindow->height());
 }
 
 void MainWindow::setFontSize(int font_size)
@@ -85,17 +105,8 @@ void MainWindow::setFontSize(int font_size)
     editor->setFont(f);
 }
 
-void MainWindow::openFile()
+void MainWindow::openFile(QString filename)
 {
-
-    QString filters = "Text files (*.txt)";
-
-    QFileDialog file_dialog(this);
-    file_dialog.setViewMode(QFileDialog::Detail);
-
-    QString filename = file_dialog.getOpenFileName(this, "Open file...", "C:/Notes", filters);
-    if (filename.isEmpty()) return;
-
     QFile file(filename);
     // check if can load
     if (!file.open(QIODevice::ReadOnly))
@@ -108,7 +119,21 @@ void MainWindow::openFile()
     editor->setPlainText(contents);
 }
 
-void MainWindow::saveFile()
+void MainWindow::openFileDialog()
+{
+
+    QString filters = "Text files (*.txt)";
+
+    QFileDialog file_dialog(this);
+    file_dialog.setViewMode(QFileDialog::Detail);
+
+    QString filename = file_dialog.getOpenFileName(this, "Open file...", "C:/Notes", filters);
+    if (filename.isEmpty()) return;
+
+    openFile(filename);
+}
+
+void MainWindow::saveFileDialog()
 {
     QString filters = "Text files (*.txt)";
 
