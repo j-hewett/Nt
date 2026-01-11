@@ -16,7 +16,7 @@ private slots:
     void saveFile();
 
 private:
-    QFont mainFont;
+    QFont m_mainFont;
     static constexpr int m_default_font_pt = 11;
     GTextEdit *editor = nullptr;
 };

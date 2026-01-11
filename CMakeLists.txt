@@ -12,6 +12,8 @@ qt_add_executable(Notepad
     mainwindow.h
     GTextEdit.h
     GTextEdit.cpp
+    QDirList.h
+    QDirList.cpp
 )
 
 target_link_libraries(Notepad

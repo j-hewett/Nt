@@ -4,19 +4,24 @@
 #include <QAction>
 #include <QTextEdit>
 #include <QSpinBox>
+#include <QFileSystemModel>
+#include <QTreeView>
+#include <QDockWidget>
+
 #include <QOverload>
 #include <QFont>
 #include <QFileDialog>
 #include <QFile>
 
 MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent), mainFont("Titillium Web")
+    QMainWindow(parent), m_mainFont("Titillium Web")
 {
     editor = new GTextEdit(this);
     setCentralWidget(editor);
-    setFont(mainFont);
+    setFont(m_mainFont);
     setFontSize(m_default_font_pt);
 
+    // Toolbar
     auto toolbar = new QToolBar("Toolbar", this);
     addToolBar(toolbar);
 
@@ -34,6 +39,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     toolbar->addWidget(font_size);
 
+    // toolbar connections
     connect(open_action, &QAction::triggered,
             this, &MainWindow::openFile);
 
@@ -46,7 +52,30 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(font_size, &QSpinBox::valueChanged,
             this, &MainWindow::setFontSize);
 
+    // directory list
+    QDockWidget *dirWindow = new QDockWidget;
+    dirWindow->setAllowedAreas(Qt::LeftDockWidgetArea
+                                    | Qt::RightDockWidgetArea);
+    addDockWidget(Qt::LeftDockWidgetArea, dirWindow);
+
+    QString path = "C:/Notes";
+
+    QFileSystemModel *model = new QFileSystemModel;
+    model->setRootPath(path);
+    QTreeView *treeView = new QTreeView;
+    treeView->setModel(model);
+
+    treeView->setRootIndex(model->index(model->rootPath()));
+
+    dirWindow->setWidget(treeView);
+
+    //hide extra columns
+    for (int i = 1; i<4; i++) {
+        treeView->hideColumn(i);
+    }
+
     this->resize(800, 500);
+    dirWindow->resize(100, dirWindow->width());
 }
 
 void MainWindow::setFontSize(int font_size)
