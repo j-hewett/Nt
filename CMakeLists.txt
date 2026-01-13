@@ -12,8 +12,8 @@ qt_add_executable(Nt
     mainwindow.h
     GTextEdit.h
     GTextEdit.cpp
-    QDirList.h
-    QDirList.cpp
+
+
     resources/icon.rc
 )
 
