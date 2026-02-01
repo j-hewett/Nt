@@ -6,67 +6,31 @@
 #include <QSpinBox>
 #include <QFileSystemModel>
 #include <QTreeView>
-#include <QDockWidget>
-
+#include <QSplitter>
 #include <QOverload>
 #include <QFont>
 #include <QFileDialog>
 #include <QFile>
 #include <QVBoxLayout>
+#include <QList>
 
 MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent), m_mainFont("Titillium Web")
+    QWidget(parent), m_mainFont("Titillium Web")
 {
-    auto editorPanel = new QWidget;
-    auto editorLayout = new QVBoxLayout;
-    editorPanel->setLayout(editorLayout);
-
-    setCentralWidget(editorPanel);
-
-    // Toolbar
-    auto toolbar = new QToolBar("Toolbar", this);
-
-    auto open_action = new QAction("Open", this);
-    auto save_action = new QAction("Save", this);
-    auto clear_action = new QAction("Clear", this);
-
-    toolbar->addAction(open_action);
-    toolbar->addAction(save_action);
-    toolbar->addAction(clear_action);
-
-    auto font_size = new QSpinBox(this);
-    font_size->setRange(1, 100);
-    font_size->setValue(m_default_font_pt);
-
-    toolbar->addWidget(font_size);
-    editorLayout->addWidget(toolbar);
+    QVBoxLayout *outer = new QVBoxLayout(this);
+    QSplitter *mainPanel = new QSplitter;
 
     // text editor
     editor = new GTextEdit(this);
     setFont(m_mainFont);
     setFontSize(m_default_font_pt);
-    editorLayout->addWidget(editor);
 
+    //Create and add to outer
+    createToolbar(outer);
 
-    // toolbar connections
-    connect(open_action, &QAction::triggered,
-            this, &MainWindow::openFileDialog);
-
-    connect(save_action, &QAction::triggered,
-            this, &MainWindow::saveFileDialog);
-
-    connect(clear_action, &QAction::triggered,
-            editor, &QTextEdit::clear);
-
-    connect(font_size, &QSpinBox::valueChanged,
-            this, &MainWindow::setFontSize);
+    outer->addWidget(mainPanel);
 
     // directory list
-    QDockWidget *dirWindow = new QDockWidget;
-    dirWindow->setAllowedAreas(Qt::LeftDockWidgetArea
-                                    | Qt::RightDockWidgetArea);
-    addDockWidget(Qt::LeftDockWidgetArea, dirWindow);
-
     QString path = "C:/Notes";
 
     QFileSystemModel *model = new QFileSystemModel;
@@ -75,8 +39,6 @@ MainWindow::MainWindow(QWidget *parent) :
     treeView->setModel(model);
 
     treeView->setRootIndex(model->index(model->rootPath()));
-
-    dirWindow->setWidget(treeView);
 
     // directory connections
     connect(treeView, &QTreeView::clicked,
@@ -88,14 +50,47 @@ MainWindow::MainWindow(QWidget *parent) :
             }
     );
 
+    //Add widgets to splitter layout
+    mainPanel->addWidget(treeView);
+    mainPanel->addWidget(editor);
+
+    // resizing
+    const int WIDTH = 800;
+    const int HEIGHT = 500;
+    this->resize(WIDTH, HEIGHT);
+
+    QList<int> defaultSizes = {150, WIDTH-150};
+    mainPanel->setSizes(defaultSizes);
+
     //hide extra columns
     for (int i = 1; i<4; i++) {
         treeView->hideColumn(i);
     }
+}
 
-    // resizing
-    this->resize(800, 500);
-    dirWindow->resize(100, dirWindow->height());
+void MainWindow::createToolbar(QVBoxLayout* editorLayout)
+{
+    auto toolbar = new QToolBar("Toolbar", this);
+
+    auto open_action = new QAction("Open", this);
+    auto save_action = new QAction("Save", this);
+    auto clear_action = new QAction("Clear", this);
+
+    toolbar->addAction(open_action);
+    toolbar->addAction(save_action);
+    toolbar->addAction(clear_action);
+
+    editorLayout->addWidget(toolbar);
+
+    // toolbar connections
+    connect(open_action, &QAction::triggered,
+            this, &MainWindow::openFileDialog);
+
+    connect(save_action, &QAction::triggered,
+            this, &MainWindow::saveFileDialog);
+
+    connect(clear_action, &QAction::triggered,
+            editor, &GTextEdit::clear);
 }
 
 void MainWindow::setFontSize(int font_size)
