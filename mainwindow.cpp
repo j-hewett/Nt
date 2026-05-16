@@ -17,6 +17,7 @@
 #include <QMenu>
 #include <QInputDialog>
 #include <QMessageBox>
+#include <QShortcut>
 
 MainWindow::MainWindow(QWidget *parent) :
     QWidget(parent), m_mainFont("Titillium Web")
@@ -28,6 +29,9 @@ MainWindow::MainWindow(QWidget *parent) :
     editor = new GTextEdit(this);
     setFont(m_mainFont);
     setFontSize(m_default_font_pt);
+
+    auto *saveShortcut = new QShortcut(QKeySequence::Save, this);
+    connect(saveShortcut, &QShortcut::activated, this, &MainWindow::saveCurrentFile);
 
     //Create and add to outer
     createToolbar(outer);
@@ -222,6 +226,7 @@ void MainWindow::openFile(QString filename)
 
     const QString contents = QString::fromUtf8(file.readAll());
     editor->setPlainText(contents);
+    m_currentFilePath = filename;
 }
 
 void MainWindow::openFileDialog()
@@ -238,6 +243,18 @@ void MainWindow::openFileDialog()
     openFile(filename);
 }
 
+void MainWindow::saveFile(QString filename)
+{
+    QFile file(filename);
+    if (!file.open(QIODevice::WriteOnly))
+    {
+        qDebug() << "Error saving file.";
+        return;
+    }
+    const QString contents = editor->toPlainText();
+    file.write(contents.toUtf8());
+}
+
 void MainWindow::saveFileDialog()
 {
     QString filters = "Text files (*.txt)";
@@ -247,16 +264,15 @@ void MainWindow::saveFileDialog()
 
     QString filename = file_dialog.getSaveFileName(this, "Save file...", "C:/Notes", filters);
 
-    QFile file(filename);
+    saveFile(filename);
+}
 
-    if (!file.open(QIODevice::WriteOnly))
-    {
-        qDebug() << "Error saving file.";
-        return;
-    }
-
-    const QString contents = editor->toPlainText();
-    file.write(contents.toUtf8());
+void MainWindow::saveCurrentFile()
+{
+    if (m_currentFilePath.isEmpty())
+        saveFileDialog();
+    else
+        saveFile(m_currentFilePath);
 }
 
 void MainWindow::setFontSize(int font_size)

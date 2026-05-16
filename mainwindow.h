@@ -24,12 +24,15 @@ private slots:
     void deleteFile(const QModelIndex &index);
     void createFolder(QDir dir, QString folderName);
     void openFile(QString filename);
+    void saveFile(QString filename);
     void openFileDialog();
     void saveFileDialog();
+    void saveCurrentFile();
 
 private:
     QFont m_mainFont;
     static constexpr int m_default_font_pt = 11;
+    QString m_currentFilePath;
 
     GTextEdit *editor = nullptr;
     QFileSystemModel *model = nullptr;
