@@ -11,8 +11,12 @@
 #include <QFont>
 #include <QFileDialog>
 #include <QFile>
+#include <QFileInfo>
 #include <QVBoxLayout>
 #include <QList>
+#include <QMenu>
+#include <QInputDialog>
+#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent) :
     QWidget(parent), m_mainFont("Titillium Web")
@@ -30,25 +34,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     outer->addWidget(mainPanel);
 
-    // directory list
+    // directory list (treeview)
     QString path = "C:/Notes";
-
-    QFileSystemModel *model = new QFileSystemModel;
-    model->setRootPath(path);
-    QTreeView *treeView = new QTreeView;
-    treeView->setModel(model);
-
-    treeView->setRootIndex(model->index(model->rootPath()));
-
-    // directory connections
-    connect(treeView, &QTreeView::clicked,
-            this, [this, model](const QModelIndex &index)
-            {
-                QString path = model->filePath(index);
-                qDebug() << path;
-                openFile(path);
-            }
-    );
+    setupTreeView(path);
 
     //Add widgets to splitter layout
     mainPanel->addWidget(treeView);
@@ -93,11 +81,133 @@ void MainWindow::createToolbar(QVBoxLayout* editorLayout)
             editor, &GTextEdit::clear);
 }
 
-void MainWindow::setFontSize(int font_size)
+void MainWindow::setupTreeView(QString path)
 {
-    QFont f = editor->font();
-    f.setPointSize(font_size);
-    editor->setFont(f);
+    model = new QFileSystemModel;
+    model->setRootPath(path);
+
+    treeView = new QTreeView;
+    treeView->setModel(model);
+    treeView->setRootIndex(model->index(model->rootPath()));
+    treeView->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    // directory connections
+    connect(treeView, &QTreeView::clicked,
+            this, [this](const QModelIndex &index)
+            {
+                QString path = model->filePath(index);
+                openFile(path);
+            }
+            );
+
+    connect(treeView, &QTreeView::customContextMenuRequested,
+            this, &MainWindow::showTreeViewContextMenu);
+}
+
+void MainWindow::showTreeViewContextMenu(const QPoint &pos)
+{
+    QDir dir = model->rootDirectory();
+    const QModelIndex index = treeView->indexAt(pos);
+    if(index.isValid())
+    {
+        QFileInfo pathInfo = model->fileInfo(index);
+        dir = pathInfo.isDir() ? QDir(model->filePath(index)) : pathInfo.dir();
+    }
+
+    QMenu contextMenu;
+    auto new_file_action = new QAction("New file", this);
+    auto new_dir_action = new QAction("New folder", this);
+    auto del_action = new QAction("Delete", this);
+
+    contextMenu.addAction(new_file_action);
+    contextMenu.addAction(new_dir_action);
+    contextMenu.addAction(del_action);
+    del_action->setEnabled(index.isValid());
+
+    connect(new_file_action, &QAction::triggered,
+            this, [this, dir]()
+            {
+                bool ok;
+                QString filename = QInputDialog::getText(this, "New file",
+                                                         "File name:", QLineEdit::Normal,
+                                                         "", &ok);
+                if (ok && !filename.isEmpty())
+                {
+                    createFile(dir, filename);
+                }
+            });
+
+    connect(new_dir_action, &QAction::triggered,
+            this, [this, dir]()
+            {
+                bool ok;
+                QString foldername = QInputDialog::getText(this, "New folder",
+                                                           "Folder name:", QLineEdit::Normal,
+                                                           "", &ok);
+                if (ok && !foldername.isEmpty())
+                {
+                    createFolder(dir, foldername);
+                }
+            });
+
+    connect(del_action, &QAction::triggered,
+            this, [this, index]()
+            {
+                deleteFile(index);
+    });
+
+    contextMenu.exec(treeView->viewport()->mapToGlobal(pos));
+}
+
+void MainWindow::createFile(QDir dir, QString filename)
+{
+    QString filePath = dir.filePath(filename) + ".txt";
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly))
+    {
+        qDebug() << "Error creating file.";
+        return;
+    }
+    file.close();
+    openFile(filePath);
+}
+
+void MainWindow::deleteFile(const QModelIndex &index)
+{
+    if (!index.isValid()) { qDebug() << "Index invalid"; return; }
+
+    QString path = model->filePath(index);
+    QFileInfo fileInfo(path);
+
+    if(fileInfo.isDir()) { qDebug() << "Cannot delete folders"; return; }
+
+    QMessageBox::StandardButton reply = QMessageBox::question(
+        this, "Delete", "Are you sure you want to delete '" + fileInfo.fileName() + "'?",
+        QMessageBox::Yes | QMessageBox::No
+        );
+
+    if (reply != QMessageBox::Yes) return;
+
+    if (fileInfo.isDir())
+    {
+        // QDir d(path);
+        // if (!d.removeRecursively())
+        //     qDebug() << "Error deleting folder.";
+    }
+    else
+    {
+        if (!model->remove(index))
+            qDebug() << "Error deleting file.";
+        qDebug() << "Index valid:" << index.isValid();
+    }
+}
+
+void MainWindow::createFolder(QDir dir, QString folderName)
+{
+    if (!dir.mkdir(folderName))
+    {
+        qDebug() << "Error creating folder.";
+    }
 }
 
 void MainWindow::openFile(QString filename)
@@ -147,4 +257,11 @@ void MainWindow::saveFileDialog()
 
     const QString contents = editor->toPlainText();
     file.write(contents.toUtf8());
+}
+
+void MainWindow::setFontSize(int font_size)
+{
+    QFont f = editor->font();
+    f.setPointSize(font_size);
+    editor->setFont(f);
 }

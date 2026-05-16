@@ -3,6 +3,10 @@
 
 #include <qmainwindow.h>
 #include <qboxlayout.h>
+
+#include <QFileSystemModel>
+#include <QTreeView>
+
 #include "GTextEdit.h"
 
 class MainWindow : public QWidget{
@@ -11,9 +15,14 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
 private:
     void createToolbar(QVBoxLayout* layout);
+    void setupTreeView(QString path);
+    void showTreeViewContextMenu(const QPoint &pos);
 
 private slots:
     void setFontSize(int font_size);
+    void createFile(QDir dir, QString filename);
+    void deleteFile(const QModelIndex &index);
+    void createFolder(QDir dir, QString folderName);
     void openFile(QString filename);
     void openFileDialog();
     void saveFileDialog();
@@ -21,7 +30,11 @@ private slots:
 private:
     QFont m_mainFont;
     static constexpr int m_default_font_pt = 11;
+
     GTextEdit *editor = nullptr;
+    QFileSystemModel *model = nullptr;
+    QTreeView *treeView = nullptr;
+
 
 };
 
