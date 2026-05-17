@@ -6,3 +6,5 @@
 - Unsaved changes preserved while jumping between files
 
 <img width="800" height="500" alt="image" src="https://github.com/user-attachments/assets/38fb6f1c-2817-4d2a-8617-fa721153d52c" />
+
+Building this project requires Qt 6 and cmake.
