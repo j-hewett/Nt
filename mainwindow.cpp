@@ -88,7 +88,12 @@ void MainWindow::createToolbar(QVBoxLayout* editorLayout)
             this, &MainWindow::saveFileDialog);
 
     connect(clear_action, &QAction::triggered,
-            editor, &GTextEdit::clear);
+            this, [this]()
+            {
+                QTextCursor cursor = editor->textCursor();
+                cursor.select(QTextCursor::Document);
+                cursor.removeSelectedText();
+            });
 }
 
 void MainWindow::setupTreeView(QString path)
