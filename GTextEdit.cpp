@@ -15,13 +15,15 @@ GTextEdit::~GTextEdit()
 void GTextEdit::wheelEvent(QWheelEvent *e)
 {
     if (e->modifiers() & Qt::ControlModifier) {
-            const int dy = e->angleDelta().y() != 0 ? e->angleDelta().y()
-                                                    : e->pixelDelta().y();
+        const int dy = e->angleDelta().y() != 0 ? e->angleDelta().y()
+                                                : e->pixelDelta().y();
 
-            if (dy > 0) zoomIn();
-            else if (dy < 0) zoomOut();
+        if (dy > 0) zoomIn();
+        else if (dy < 0) zoomOut();
 
-            e->accept();
-            return;
-        }
+        e->accept();
+        return;
+    }
+    QTextEdit::wheelEvent(e); // base class handles normal scrolling
+
 }
