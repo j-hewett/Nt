@@ -11,7 +11,7 @@ qt_add_executable(Nt
     mainwindow.cpp
     mainwindow.h
     GTextEdit.h
-    GTextEdit.cpp
+
 
 
     resources/icon.rc
