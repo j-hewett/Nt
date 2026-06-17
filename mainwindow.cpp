@@ -19,6 +19,7 @@
 #include <QMessageBox>
 #include <QShortcut>
 #include <QTextDocument>
+#include <QLabel>
 
 MainWindow::MainWindow(QWidget *parent) :
     QWidget(parent), m_mainFont("Titillium Web")
@@ -112,6 +113,21 @@ void MainWindow::setupOptionsDialog()
 {
     m_optionsDialog->setWindowTitle("Options");
     m_optionsDialog->setMinimumWidth(300);
+
+    QFontMetrics metrics(m_editor->font());
+    qreal minPixels = metrics.horizontalAdvance(QChar::VisualTabCharacter);
+
+    auto *layout = new QHBoxLayout(m_optionsDialog);
+    auto *spinBox = new QSpinBox(m_optionsDialog);
+    spinBox->setRange(minPixels, 200);
+    spinBox->setValue(80);
+    spinBox->setSingleStep(5);
+
+    layout->addWidget(new QLabel("Tab width (px):"));
+    layout->addWidget(spinBox);
+
+    connect(spinBox, &QSpinBox::valueChanged,
+            m_editor, &GTextEdit::setTabStopDistance);
 }
 
 void MainWindow::setupTreeView(QString path)
