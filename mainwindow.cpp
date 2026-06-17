@@ -66,7 +66,7 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 }
 
-void MainWindow::createToolbar(QVBoxLayout* editorLayout)
+void MainWindow::setupToolbar(QVBoxLayout* editorLayout)
 {
     auto toolbar = new QToolBar("Toolbar", this);
 

@@ -15,7 +15,7 @@ class MainWindow : public QWidget{
 public:
     explicit MainWindow(QWidget *parent = nullptr);
 private:
-    void createToolbar(QVBoxLayout* layout);
+    void setupToolbar(QVBoxLayout* layout);
     void setupTreeView(QString path);
     void showTreeViewContextMenu(const QPoint &pos);
 
