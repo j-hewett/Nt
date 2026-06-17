@@ -27,20 +27,20 @@ MainWindow::MainWindow(QWidget *parent) :
     QSplitter *mainPanel = new QSplitter;
 
     // text editor
-    editor = new GTextEdit(this);
+    m_editor = new GTextEdit(this);
     setFont(m_mainFont);
     setFontSize(m_default_font_pt);
 
     //add anonymous start-up doc to the cache
     QTextDocument *doc = new QTextDocument(this);
     m_documentCache.insert("", doc);
-    editor->setDocument(doc);
+    m_editor->setDocument(doc);
 
     auto *saveShortcut = new QShortcut(QKeySequence::Save, this);
     connect(saveShortcut, &QShortcut::activated, this, &MainWindow::saveCurrentFile);
 
     //Create and add to outer
-    createToolbar(outer);
+    setupToolbar(outer);
 
     outer->addWidget(mainPanel);
 
@@ -49,8 +49,8 @@ MainWindow::MainWindow(QWidget *parent) :
     setupTreeView(path);
 
     //Add widgets to splitter layout
-    mainPanel->addWidget(treeView);
-    mainPanel->addWidget(editor);
+    mainPanel->addWidget(m_treeView);
+    mainPanel->addWidget(m_editor);
 
     // resizing
     const int WIDTH = 800;
@@ -62,7 +62,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //hide extra columns
     for (int i = 1; i<4; i++) {
-        treeView->hideColumn(i);
+        m_treeView->hideColumn(i);
     }
 }
 
@@ -97,44 +97,50 @@ void MainWindow::setupToolbar(QVBoxLayout* editorLayout)
     connect(clear_action, &QAction::triggered,
             this, [this]()
             {
-                QTextCursor cursor = editor->textCursor();
+                QTextCursor cursor = m_editor->textCursor();
                 cursor.select(QTextCursor::Document);
                 cursor.removeSelectedText();
             });
 }
 
+void MainWindow::setupOptionsDialog()
+{
+    m_optionsDialog->setWindowTitle("Options");
+    m_optionsDialog->setMinimumWidth(300);
+}
+
 void MainWindow::setupTreeView(QString path)
 {
-    model = new QFileSystemModel;
-    model->setRootPath(path);
+    m_fileModel= new QFileSystemModel;
+    m_fileModel->setRootPath(path);
 
-    treeView = new QTreeView;
-    treeView->setModel(model);
-    treeView->setRootIndex(model->index(model->rootPath()));
-    treeView->setContextMenuPolicy(Qt::CustomContextMenu);
+    m_treeView = new QTreeView;
+    m_treeView->setModel(m_fileModel);
+    m_treeView->setRootIndex(m_fileModel->index(m_fileModel->rootPath()));
+    m_treeView->setContextMenuPolicy(Qt::CustomContextMenu);
 
     // directory connections
-    connect(treeView, &QTreeView::clicked,
+    connect(m_treeView, &QTreeView::clicked,
             this, [this](const QModelIndex &index)
             {
 
-                QString path = model->filePath(index);
+                QString path = m_fileModel->filePath(index);
                 openFile(path);
             }
             );
 
-    connect(treeView, &QTreeView::customContextMenuRequested,
+    connect(m_treeView, &QTreeView::customContextMenuRequested,
             this, &MainWindow::showTreeViewContextMenu);
 }
 
 void MainWindow::showTreeViewContextMenu(const QPoint &pos)
 {
-    QDir dir = model->rootDirectory();
-    const QModelIndex index = treeView->indexAt(pos);
+    QDir dir = m_fileModel->rootDirectory();
+    const QModelIndex index = m_treeView->indexAt(pos);
     if(index.isValid())
     {
-        QFileInfo pathInfo = model->fileInfo(index);
-        dir = pathInfo.isDir() ? QDir(model->filePath(index)) : pathInfo.dir();
+        QFileInfo pathInfo = m_fileModel->fileInfo(index);
+        dir = pathInfo.isDir() ? QDir(m_fileModel->filePath(index)) : pathInfo.dir();
     }
 
     QMenu contextMenu;
@@ -179,7 +185,7 @@ void MainWindow::showTreeViewContextMenu(const QPoint &pos)
                 deleteFile(index);
     });
 
-    contextMenu.exec(treeView->viewport()->mapToGlobal(pos));
+    contextMenu.exec(m_treeView->viewport()->mapToGlobal(pos));
 }
 
 void MainWindow::createFile(QDir dir, QString filename)
@@ -199,7 +205,7 @@ void MainWindow::deleteFile(const QModelIndex &index)
 {
     if (!index.isValid()) { qDebug() << "Index invalid"; return; }
 
-    QString path = model->filePath(index);
+    QString path = m_fileModel->filePath(index);
     QFileInfo fileInfo(path);
 
     if(fileInfo.isDir()) { qDebug() << "Cannot delete folders"; return; }
@@ -219,7 +225,7 @@ void MainWindow::deleteFile(const QModelIndex &index)
     }
     else
     {
-        if (!model->remove(index))
+        if (!m_fileModel->remove(index))
             qDebug() << "Error deleting file.";
         qDebug() << "Index valid:" << index.isValid();
     }
@@ -238,7 +244,7 @@ void MainWindow::openFile(QString filename)
     //outgoing file
     if (!m_currentFilePath.isEmpty())
     {
-        m_documentCache[m_currentFilePath] = editor->document();
+        m_documentCache[m_currentFilePath] = m_editor->document();
     }
 
     //incoming file
@@ -247,7 +253,7 @@ void MainWindow::openFile(QString filename)
 
     if (m_documentCache.contains(filename))
     {
-        editor->setDocument(m_documentCache[filename]);
+        m_editor->setDocument(m_documentCache[filename]);
         return;
     }
 
@@ -265,7 +271,7 @@ void MainWindow::openFile(QString filename)
     QTextDocument *doc = new QTextDocument(this);
     doc->setPlainText(contents);
     m_documentCache.insert(filename, doc);
-    editor->setDocument(doc);
+    m_editor->setDocument(doc);
 }
 
 void MainWindow::openFileDialog()
@@ -290,7 +296,7 @@ void MainWindow::saveFile(QString filename)
         qDebug() << "Error saving file.";
         return;
     }
-    const QString contents = editor->toPlainText();
+    const QString contents = m_editor->toPlainText();
     file.write(contents.toUtf8());
 }
 
@@ -316,7 +322,7 @@ void MainWindow::saveCurrentFile()
 
 void MainWindow::setFontSize(int font_size)
 {
-    QFont f = editor->font();
+    QFont f = m_editor->font();
     f.setPointSize(font_size);
-    editor->setFont(f);
+    m_editor->setFont(f);
 }
