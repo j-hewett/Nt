@@ -39,10 +39,13 @@ MainWindow::MainWindow(QWidget *parent) :
     auto *saveShortcut = new QShortcut(QKeySequence::Save, this);
     connect(saveShortcut, &QShortcut::activated, this, &MainWindow::saveCurrentFile);
 
-    //Create and add to outer
-    setupToolbar(outer);
+    m_optionsDialog = new QDialog(this);
+    setupOptionsDialog();
+
+    setupToolbar(outer);     //Create and add to outer
 
     outer->addWidget(mainPanel);
+
 
     // directory list (treeview)
     QString path = "C:/Notes";
@@ -101,6 +104,8 @@ void MainWindow::setupToolbar(QVBoxLayout* editorLayout)
                 cursor.select(QTextCursor::Document);
                 cursor.removeSelectedText();
             });
+    connect(options_action, &QAction::triggered,
+            m_optionsDialog, &QDialog::exec);
 }
 
 void MainWindow::setupOptionsDialog()
