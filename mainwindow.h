@@ -15,7 +15,8 @@ class MainWindow : public QWidget{
 public:
     explicit MainWindow(QWidget *parent = nullptr);
 private:
-    void createToolbar(QVBoxLayout* layout);
+    void setupToolbar(QVBoxLayout* layout);
+    void setupOptionsDialog();
     void setupTreeView(QString path);
     void showTreeViewContextMenu(const QPoint &pos);
 
@@ -36,9 +37,10 @@ private:
     QHash<QString, QTextDocument*> m_documentCache;
     QString m_currentFilePath;
 
-    GTextEdit *editor = nullptr;
-    QFileSystemModel *model = nullptr;
-    QTreeView *treeView = nullptr;
+    GTextEdit *m_editor = nullptr;
+    QFileSystemModel *m_fileModel = nullptr;
+    QTreeView *m_treeView = nullptr;
+    QDialog *m_optionsDialog = nullptr;
 
 
 };
