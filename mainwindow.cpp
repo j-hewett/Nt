@@ -73,10 +73,17 @@ void MainWindow::createToolbar(QVBoxLayout* editorLayout)
     auto open_action = new QAction("Open", this);
     auto save_action = new QAction("Save", this);
     auto clear_action = new QAction("Clear", this);
+    auto options_action = new QAction("Options", this);
+
+    auto *spacer = new QWidget(this);
+    spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     toolbar->addAction(open_action);
     toolbar->addAction(save_action);
     toolbar->addAction(clear_action);
+    toolbar->addWidget(spacer);
+    toolbar->addAction(options_action);
+
 
     editorLayout->addWidget(toolbar);
 
