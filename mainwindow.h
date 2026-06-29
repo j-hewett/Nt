@@ -7,6 +7,7 @@
 #include <QFileSystemModel>
 #include <QTreeView>
 #include <QTextDocument>
+#include <QLabel>
 
 #include "GTextEdit.h"
 
@@ -30,6 +31,7 @@ private slots:
     void openFileDialog();
     void saveFileDialog();
     void saveCurrentFile();
+    void setDocNameHints();
 
 private:
     QFont m_mainFont;
@@ -38,6 +40,7 @@ private:
     QString m_currentFilePath;
 
     GTextEdit *m_editor = nullptr;
+    QLabel *m_docName = nullptr;
     QFileSystemModel *m_fileModel = nullptr;
     QTreeView *m_treeView = nullptr;
     QDialog *m_optionsDialog = nullptr;
