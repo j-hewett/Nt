@@ -25,7 +25,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QWidget(parent), m_mainFont("Titillium Web")
 {
     QVBoxLayout *outer = new QVBoxLayout(this);
-    QSplitter *mainPanel = new QSplitter;
+    QSplitter *mainPanel = new QSplitter(this);
 
     // text editor
     m_editor = new GTextEdit(this);
@@ -37,6 +37,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_documentCache.insert("", doc);
     m_editor->setDocument(doc);
 
+    // Connect crtl-S
     auto *saveShortcut = new QShortcut(QKeySequence::Save, this);
     connect(saveShortcut, &QShortcut::activated, this, &MainWindow::saveCurrentFile);
 
@@ -45,8 +46,15 @@ MainWindow::MainWindow(QWidget *parent) :
 
     setupToolbar(outer);     //Create and add to outer
 
+    // Add document name label
+    m_docName = new QLabel(this);
+    m_docName->setText("Unnamed document");
+    m_docName->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    outer->addWidget(m_docName);
     outer->addWidget(mainPanel);
 
+    //Align docName and adjust spacing of outer layout
+    outer->setAlignment(m_docName, Qt::AlignRight);
 
     // directory list (treeview)
     QString path = "C:/Notes";
@@ -293,6 +301,7 @@ void MainWindow::openFile(QString filename)
     doc->setPlainText(contents);
     m_documentCache.insert(filename, doc);
     m_editor->setDocument(doc);
+    setDocNameHints();
 }
 
 void MainWindow::openFileDialog()
@@ -331,14 +340,35 @@ void MainWindow::saveFileDialog()
     QString filename = file_dialog.getSaveFileName(this, "Save file...", "C:/Notes", filters);
 
     saveFile(filename);
+    setCurrentFilePath(filename);
 }
 
 void MainWindow::saveCurrentFile()
 {
     if (m_currentFilePath.isEmpty() || m_currentFilePath == "")
-        saveFileDialog();
+    {
+        saveFileDialog(); // also sets m_currentFilePath
+        setDocNameHints();
+    }
     else
         saveFile(m_currentFilePath);
+}
+
+void MainWindow::setCurrentFilePath(QString filename)
+{
+    m_currentFilePath = filename;
+}
+
+void MainWindow::setDocNameHints()
+{
+    // File hints
+    QFile file(m_currentFilePath);
+    QFileInfo info(file);
+    QString baseFileName = info.fileName(); //Get just the filename not the full path
+    m_docName->setText(baseFileName);
+    m_docName->setToolTip(info.absoluteFilePath()); // full path in tooltip
+    setWindowTitle(baseFileName + "[*]" + " - Nt");
+    setWindowModified(false);
 }
 
 void MainWindow::setFontSize(int font_size)
