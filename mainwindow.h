@@ -31,6 +31,7 @@ private slots:
     void openFileDialog();
     void saveFileDialog();
     void saveCurrentFile();
+    void setCurrentFilePath(QString filename);
     void setDocNameHints();
 
 private:

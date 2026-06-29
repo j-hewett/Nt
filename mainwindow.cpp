@@ -340,14 +340,23 @@ void MainWindow::saveFileDialog()
     QString filename = file_dialog.getSaveFileName(this, "Save file...", "C:/Notes", filters);
 
     saveFile(filename);
+    setCurrentFilePath(filename);
 }
 
 void MainWindow::saveCurrentFile()
 {
     if (m_currentFilePath.isEmpty() || m_currentFilePath == "")
-        saveFileDialog();
+    {
+        saveFileDialog(); // also sets m_currentFilePath
+        setDocNameHints();
+    }
     else
         saveFile(m_currentFilePath);
+}
+
+void MainWindow::setCurrentFilePath(QString filename)
+{
+    m_currentFilePath = filename;
 }
 
 void MainWindow::setDocNameHints()
