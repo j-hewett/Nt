@@ -1,16 +1,16 @@
 #ifndef G_EDITOR_H
 #define G_EDITOR_H
 
-#include <QTextEdit>
+#include <QPlainTextEdit>
 #include <QEvent>
 #include <QWheelEvent>
 
-class GTextEdit : public QTextEdit
+class GTextEdit : public QPlainTextEdit
 {
     Q_OBJECT
 
 public:
-    explicit GTextEdit(QWidget* parent = nullptr) : QTextEdit(parent) {}
+    explicit GTextEdit(QWidget* parent = nullptr) : QPlainTextEdit(parent) {}
     ~GTextEdit() override = default;
 private:
 
@@ -27,7 +27,7 @@ private:
             event->accept();
             return;
         }
-        QTextEdit::wheelEvent(event); // base class handles normal scrolling
+        QPlainTextEdit::wheelEvent(event); // base class handles normal scrolling
         }
     };
 
