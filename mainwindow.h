@@ -20,6 +20,7 @@ private:
     void setupOptionsDialog();
     void setupTreeView(QString path);
     void showTreeViewContextMenu(const QPoint &pos);
+    QTextDocument* makePlainDocument(const QString &text, QObject *parent);
 
 private slots:
     void setFontSize(int font_size);
