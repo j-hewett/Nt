@@ -33,7 +33,7 @@ MainWindow::MainWindow(QWidget *parent) :
     setFontSize(m_default_font_pt);
 
     //add anonymous start-up doc to the cache
-    QTextDocument *doc = new QTextDocument(this);
+    QTextDocument *doc = makePlainDocument("", this);
     m_documentCache.insert("", doc);
     m_editor->setDocument(doc);
 
@@ -287,7 +287,6 @@ void MainWindow::openFile(QString filename)
     }
 
     QFile file(filename);
-    // check if can load
     if (!file.open(QIODevice::ReadOnly))
     {
         qDebug() << "Error loading file.";
@@ -297,8 +296,7 @@ void MainWindow::openFile(QString filename)
     const QString contents = QString::fromUtf8(file.readAll());
     file.close();
 
-    QTextDocument *doc = new QTextDocument(this);
-    doc->setPlainText(contents);
+    QTextDocument *doc = makePlainDocument(contents, this);
     m_documentCache.insert(filename, doc);
     m_editor->setDocument(doc);
     setDocNameHints();
@@ -376,4 +374,13 @@ void MainWindow::setFontSize(int font_size)
     QFont f = m_editor->font();
     f.setPointSize(font_size);
     m_editor->setFont(f);
+}
+
+QTextDocument* MainWindow::makePlainDocument(const QString &text, QObject *parent)
+{
+    auto *doc = new QTextDocument(parent);
+    doc->setDocumentLayout(new QPlainTextDocumentLayout(doc));
+    if (!text.isEmpty())
+        doc->setPlainText(text);
+    return doc;
 }
